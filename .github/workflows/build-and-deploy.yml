@@ -87,8 +87,7 @@ jobs:
           project: default
           template: my-template
           parameters: |
-            - name: ingress_link
-              value: "http://pr${{ github.event.pull_request.number }}.vcluster.tech"
+            ingress_link: "http://pr${{ github.event.pull_request.number }}.vcluster.tech"
 
       # Step 11: Deploy to vCluster
       - name: Deploy Application to vCluster
