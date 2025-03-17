@@ -42,16 +42,17 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | ko login ghcr.io --username ${{ github.actor }} --password-stdin
 
       # Step 6: Build and Push Image with ko
-      - name: Build and Push Image
+      - name: Build and Push Image with ko
         working-directory: app
         env:
           KO_DOCKER_REPO: ghcr.io/loftlabs-experiments/workshop-ephemeral-pr
           KO_DEFAULT_PLATFORM: linux/amd64
         run: |
           export IMAGE_TAG=sha-$(git rev-parse --short HEAD)
-          ko build . -t $IMAGE_TAG -t latest
-          echo "image_deploy_tag=ghcr.io/loftlabs-experiments/workshop-ephemeral-pr:$IMAGE_TAG" >> $GITHUB_ENV
-
+          FULL_IMAGE=$(ko build . -t $IMAGE_TAG -t latest)
+          echo "Full image name: $FULL_IMAGE"
+          echo "image_deploy_tag=$FULL_IMAGE" >> $GITHUB_ENV
+     
       # Step 7: Generate Deployment Manifest
       - name: Generate Deployment Manifest
         uses: cuchi/jinja2-action@v1.1.0
@@ -62,7 +63,6 @@ jobs:
           variables: |
             image_deploy_tag=${{ env.image_deploy_tag }}
             ingress_tag=pr${{ github.event.pull_request.number }}.vcluster.tech
-
       # Step 8: Push to a Feature Branch
       - name: Push Deployment Manifest
         run: |
