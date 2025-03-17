@@ -66,14 +66,15 @@ jobs:
 
       # Step 8: Push to a Feature Branch
       - name: Push Deployment Manifest
+        env:
+          PAT_TOKEN: ${{ secrets.ACCESS_GITHUB }}
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git checkout -b feature-test-${{ github.event.pull_request.head.sha }}
           git add deploy/deployment.yaml
           git commit -m "Adding deployment.yaml for PR-${{ github.event.pull_request.number }}" || echo "No changes to commit"
-          git push origin feature-test-${{ github.event.pull_request.head.sha }} --force
-
+          git push https://x-access-token:${ACCESS_GITHUB}@github.com/LoftLabs-Experiments/workshop-ephemeral-PR.git feature-test-${{ github.event.pull_request.head.sha }} --force
       # Step 9: Install vCluster CLI
       - name: Install vCluster CLI
         uses: loft-sh/setup-vcluster@main
