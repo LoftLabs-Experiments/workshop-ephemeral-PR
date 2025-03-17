@@ -1,0 +1,4 @@
+builds:
+  - id: app
+    main: ./app/main.go
+

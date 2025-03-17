@@ -1,0 +1,102 @@
+name: Build and Deploy with vCluster
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  build-and-deploy:
+    if: ${{ github.event.label.name == 'test' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the PR Code
+      - name: Checkout PR Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # Step 2: Set up Go
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # Matches your Dockerfile's golang:1.21-alpine
+
+      # Step 3: Initialize Go Module
+      - name: Initialize Go Module
+        working-directory: app
+        run: |
+          go mod init github.com/loftlabs-experiments/workshop-ephemeral-pr || echo "Module already initialized"
+          go mod tidy
+
+      # Step 4: Set up ko
+      - name: Set up ko
+        uses: ko-build/setup-ko@v0.6
+        with:
+          version: v0.14.1
+
+      # Step 5: Log into GHCR
+      - name: Log into GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ko login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      # Step 6: Build and Push Image with ko
+      - name: Build and Push Image
+        working-directory: app
+        env:
+          KO_DOCKER_REPO: ghcr.io/loftlabs-experiments/workshop-ephemeral-pr
+          KO_DEFAULT_PLATFORM: linux/amd64
+        run: |
+          export IMAGE_TAG=sha-$(git rev-parse --short HEAD)
+          ko build . -t $IMAGE_TAG -t latest
+          echo "image_deploy_tag=ghcr.io/loftlabs-experiments/workshop-ephemeral-pr:$IMAGE_TAG" >> $GITHUB_ENV
+
+      # Step 7: Generate Deployment Manifest
+      - name: Generate Deployment Manifest
+        uses: cuchi/jinja2-action@v1.1.0
+        with:
+          template: tmpl/deploy.j2
+          output_file: deploy/deployment.yaml
+          strict: true
+          variables: |
+            image_deploy_tag=${{ env.image_deploy_tag }}
+            ingress_tag=pr${{ github.event.pull_request.number }}.vcluster.tech
+
+      # Step 8: Push to a Feature Branch
+      - name: Push Deployment Manifest
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git checkout -b feature-test-${{ github.event.pull_request.head.sha }}
+          git add deploy/deployment.yaml
+          git commit -m "Adding deployment.yaml for PR-${{ github.event.pull_request.number }}" || echo "No changes to commit"
+          git push origin feature-test-${{ github.event.pull_request.head.sha }} --force
+
+      # Step 9: Install vCluster CLI
+      - name: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+        with:
+          url: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          access-key: ${{ secrets.VCLUSTER_ACCESS_KEY }}
+
+      # Step 10: Create vCluster
+      - name: Create A vCluster
+        uses: loft-sh/create-vcluster@main
+        with:
+          name: pr-${{ github.event.pull_request.number }}
+          project: default
+          template: my-template
+          parameters: |
+            - name: ingress_link
+              value: "http://pr${{ github.event.pull_request.number }}.vcluster.tech"
+
+      # Step 11: Deploy to vCluster
+      - name: Deploy Application to vCluster
+        run: |
+          kubectl apply -Rf deploy/
+
+      # Step 12: Test Application with curl
+      - name: Test Application
+        run: |
+          sleep 10  # Wait for the application to be ready
+          curl --retry 5 --retry-delay 10 http://pr${{ github.event.pull_request.number }}.vcluster.tech

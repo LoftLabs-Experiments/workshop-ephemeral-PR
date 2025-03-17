@@ -1,0 +1,25 @@
+name: Clean Up vCluster
+
+on:
+  pull_request:
+    types: [closed, unlabeled]
+
+jobs:
+  cleanup:
+    if: (github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event.action == 'unlabeled' && github.event.label.name == 'test')
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Install vCluster CLI
+      - name: Install vCluster CLI
+        uses: loft-sh/setup-vcluster@main
+        with:
+          url: ${{ secrets.VCLUSTER_PLATFORM_URL }}
+          access-key: ${{ secrets.VCLUSTER_ACCESS_KEY }}
+
+      # Step 2: Delete vCluster
+      - name: Delete vCluster
+        env:
+          NAME: pr-${{ github.event.pull_request.number }}
+        run: |
+          vcluster platform delete vcluster $NAME --project default --force || echo "vCluster $NAME not found or already deleted"
