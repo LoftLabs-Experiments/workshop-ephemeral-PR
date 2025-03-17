@@ -28,23 +28,24 @@ jobs:
           git config --global user.name "Your Name"
           FEATURE_BRANCH="feature-test-${{ github.event.pull_request.head.sha }}"
           git fetch origin $FEATURE_BRANCH
-          git merge --no-ff $FEATURE_BRANCH -m "Merge deployment.yaml from PR #${{ github.event.pull_request.number }} into main"
+          git merge --no-ff origin/$FEATURE_BRANCH -m "Merge deployment.yaml from PR #${{ github.event.pull_request.number }} into main"
           git push origin main
-          
+
+      # Step 3: Delete Feature Branch (only if PR is merged)
       - name: Delete Feature Branch
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           FEATURE_BRANCH="feature-test-${{ github.event.pull_request.head.sha }}"
           git push origin --delete $FEATURE_BRANCH
-          
-      # Step 3: Install vCluster CLI
+
+      # Step 4: Install vCluster CLI
       - name: Install vCluster CLI
         uses: loft-sh/setup-vcluster@main
         with:
           url: ${{ secrets.VCLUSTER_PLATFORM_URL }}
           access-key: ${{ secrets.VCLUSTER_ACCESS_KEY }}
 
-      # Step 4: Delete vCluster
+      # Step 5: Delete vCluster
       - name: Delete vCluster
         env:
           NAME: pr-${{ github.event.pull_request.number }}
