@@ -8,9 +8,6 @@ jobs:
   build-and-deploy:
     if: ${{ github.event.label.name == 'test' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write  # Required to push to GHCR
 
     steps:
       # Step 1: Checkout the PR Code
@@ -47,12 +44,12 @@ jobs:
       - name: Build and Push Image
         working-directory: app
         env:
-          KO_DOCKER_REPO: ttl.sh/workshop-ephemeral-pr
+          KO_DOCKER_REPO: ghcr.io/loftlabs-experiments/workshop-ephemeral-pr
           KO_DEFAULT_PLATFORM: linux/amd64
         run: |
           export IMAGE_TAG=sha-$(git rev-parse --short HEAD)
           ko build . -t $IMAGE_TAG -t latest
-          echo "image_deploy_tag=ttl.sh/workshop-ephemeral-pr:$IMAGE_TAG" >> $GITHUB_ENV
+          echo "image_deploy_tag=ghcr.io/loftlabs-experiments/workshop-ephemeral-pr:$IMAGE_TAG" >> $GITHUB_ENV
 
       # Step 7: Generate Deployment Manifest
       - name: Generate Deployment Manifest
