@@ -8,6 +8,9 @@ jobs:
   build-and-deploy:
     if: ${{ github.event.label.name == 'test' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # Required to push to GHCR
 
     steps:
       # Step 1: Checkout the PR Code
@@ -20,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'  # Matches your Dockerfile's golang:1.21-alpine
+          go-version: '1.21'
 
       # Step 3: Initialize Go Module
       - name: Initialize Go Module
@@ -98,5 +101,5 @@ jobs:
       # Step 12: Test Application with curl
       - name: Test Application
         run: |
-          sleep 10  # Wait for the application to be ready
+          sleep 10
           curl --retry 5 --retry-delay 10 http://pr${{ github.event.pull_request.number }}.vcluster.tech
