@@ -9,7 +9,7 @@ jobs:
     if: ${{ github.event.label.name == 'test' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write  # Required to push to GHCR
 
     steps:
