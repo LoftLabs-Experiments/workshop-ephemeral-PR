@@ -1,0 +1,16 @@
+site_name: Ephemeral PR environments using vCluster
+theme:
+  name: material
+  palette:
+    scheme: default
+    primary: blue
+    accent: cyan
+nav:
+  - Home: index.md
+  - Quickstart: QUICKSTART.md
+
+repo_url: https://github.com/LoftLabs-Experiments/workshop-ephemeral-PR
+repo_name: LoftLabs-Experiments/workshop-ephemeral-PR
+
+site_dir: site
+
