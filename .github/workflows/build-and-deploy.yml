@@ -70,7 +70,7 @@ jobs:
           git checkout -b feature-test-${{ github.event.pull_request.head.sha }}
           git add deploy/deployment.yaml
           git commit -m "Adding deployment.yaml for PR-${{ github.event.pull_request.number }}" || echo "No changes to commit"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/LoftLabs-Experiments/workshop-ephemeral-PR.git feature-test-${{ github.event.pull_request.head.sha }} --force
+          git push https://x-access-token:${{ secrets.ACCESS_GITHUB }}@github.com/LoftLabs-Experiments/workshop-ephemeral-PR.git feature-test-${{ github.event.pull_request.head.sha }} --force
 
 
       # Step 9: Install vCluster CLI
