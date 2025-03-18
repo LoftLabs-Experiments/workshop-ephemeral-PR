@@ -58,4 +58,4 @@ jobs:
         env:
           NAME: pr-${{ github.event.pull_request.number }}
         run: |
-          vcluster platform delete vcluster $NAME --project default --force || echo "vCluster $NAME not found or already deleted"
+          vcluster platform delete vcluster $NAME --project default 
