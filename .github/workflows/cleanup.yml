@@ -12,7 +12,7 @@ jobs:
       contents: write
 
     steps:
-      # Step 1: Checkout Main Branch (only if PR is merged)
+      # Step 1: Checkout Main Branch
       - name: Checkout Main Branch
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         uses: actions/checkout@v3
@@ -20,18 +20,26 @@ jobs:
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
 
-      # Step 2: Merge Feature Branch into Main (only if PR is merged)
-      - name: Merge Feature Branch into Main
+      # Step 2: Update deployment.yaml in Main
+      - name: Update deployment.yaml in Main
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           git config --global user.email "your-email@example.com"
           git config --global user.name "Your Name"
           FEATURE_BRANCH="feature-test-${{ github.event.pull_request.head.sha }}"
+          echo "Current branch:"
+          git branch --show-current
+          echo "Fetching feature branch: $FEATURE_BRANCH"
           git fetch origin $FEATURE_BRANCH
-          git merge --no-ff --allow-unrelated-histories origin/$FEATURE_BRANCH -m "Merge deployment.yaml from PR #${{ github.event.pull_request.number }} into main"
+          echo "Checking out deploy/deployment.yaml from origin/$FEATURE_BRANCH"
+          git checkout origin/$FEATURE_BRANCH -- deploy/deployment.yaml
+          echo "Adding and committing changes"
+          git add deploy/deployment.yaml
+          git commit -m "Add or update deployment.yaml from PR #${{ github.event.pull_request.number }}" || echo "No changes to commit"
+          echo "Pushing changes to main"
           git push origin main
 
-      # Step 3: Delete Feature Branch (only if PR is merged)
+      # Step 3: Delete Feature Branch
       - name: Delete Feature Branch
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
