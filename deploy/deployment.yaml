@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: workshop-app
-        image: ghcr.io/loftlabs-experiments/workshop-ephemeral-pr/workshop-ephemeral-pr-d605cb2ec9d7e4baa0184a9d1f448322@sha256:e9e46661dda5778aaecbac1940abac30b23b362b983b0819f104be6e2c06f27b
+        image: ghcr.io/loftlabs-experiments/workshop-ephemeral-pr/workshop-ephemeral-pr-d605cb2ec9d7e4baa0184a9d1f448322@sha256:2ea5d2b203663963774382f83647f735a55a37bc3049a0fc35c63aefd5dc1a4c
         ports:
         - containerPort: 8080
 ---
@@ -40,7 +40,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: pr9.vcluster.tech
+  - host: pr10.vcluster.tech
     http:
       paths:
       - path: /
